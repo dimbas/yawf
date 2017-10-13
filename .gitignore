@@ -1,0 +1,12 @@
+*.log
+*.pyc
+.cache/
+.coverage
+.idea/
+.vscode/
+yawf.egg-info/
+build/
+dist/
+docs/build/
+wheelhouse/
+htmlcov/
