@@ -39,7 +39,7 @@ def create_request(path: str, method: str,
     env = create_base_env()
 
     if cookies is not None:
-        env['HTTP_COOKIE'] = Cookies(cookies).wsgi_header
+        env['HTTP_COOKIE'] = Cookies(cookies).wsgi_header_value
 
     if headers is not None:
         if isinstance(headers, dict):

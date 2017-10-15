@@ -11,7 +11,7 @@ HTTP_STATUSES_STRINGS = http.client.responses
 class Headers:
     def __init__(self, env=None):
         if isinstance(env, Headers):
-            self._headers = env._headers
+            self._headers = env._headers[:]
         elif isinstance(env, dict):
             self._headers = [(key, val) for key, val in env.items()]
         elif isinstance(env, (list, tuple)):
@@ -21,22 +21,22 @@ class Headers:
         else:
             self._headers = []
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str):
         for name, val in self._headers:
             if name.lower() == item.lower():
                 return val
         raise KeyError
 
-    def get(self, item, default=None):
+    def get(self, item: str, default=None) -> str:
         try:
             return self[item]
         except KeyError:
             return default
 
-    def getall(self, item):
+    def getall(self, item: str) -> list:
         return [val for name, val in self._headers if name.lower() == item.lower()]
 
-    def add(self, name, val):
+    def add(self, name: str, val: str):
         self._headers.append((name, val))
 
     def __contains__(self, item):
@@ -62,7 +62,7 @@ class Headers:
         return self._headers
 
     @classmethod
-    def from_wsgi_env(cls, env: dict):
+    def from_wsgi_env(cls, env: dict) -> 'Headers':
         h = cls()
         h._headers = [(key.replace('HTTP_', '').replace('_', '-'), subval.strip())
                       for key, val in env.items() if key.startswith('HTTP')
@@ -97,20 +97,25 @@ class Cookies(dict):
             key, val = item.split('=')
             self[key] = val
 
-    def set(self, key, val):
+    def set(self, key: str, val: str):
         self[key] = val
 
     @property
+    def wsgi_header_value(self):
+        return '; '.join(['{}={}'.format(key, val) for key, val in self.items()])
+
+    @property
     def wsgi_header(self):
-        return ';'.join(['{}={}'.format(key, val) for key, val in self.items()])
+        return 'HTTP_COOKIE', self.wsgi_header_value
 
 
 class Request:
+    _content = None
+    _headers = None
+    _cookies = None
+
     def __init__(self, environment):
         self.env = environment
-        self._content = None
-        self._headers = None
-        self._cookies = None
 
     @property
     def path(self):
@@ -168,7 +173,7 @@ class Request:
 class Response:
     default_status = 200
 
-    def __init__(self, response=None, headers=None, status=None, cookies=None):
+    def __init__(self, response=None, headers=None, status=default_status, cookies=None):
         if isinstance(headers, Headers):
             self.headers = headers
         else:
@@ -187,7 +192,7 @@ class Response:
         else:
             self.response = response
 
-        self.status = status if status is not None else Response.default_status
+        self.status = status
 
         if isinstance(cookies, Cookies):
             self.cookies = cookies

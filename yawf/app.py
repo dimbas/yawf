@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 class YAWF:
     def __init__(self, request_class=Request):
         self.router = Router()
-        self.request_class = request_class
+        self._request_class = request_class
 
     def make_request(self, environment) -> Request:
-        return self.request_class(environment)
+        environment['app'] = self
+        return self._request_class(environment)
 
     def find_handler(self, request: Request) -> t.Callable:
         return self.router.search_route(path=request.path, method=request.method)
@@ -48,7 +49,6 @@ class YAWF:
         return response
 
     def __call__(self, environment, start_response):
-        environment['app'] = self
         try:
             response = self.make_response(environment)
         except HttpError as error:
