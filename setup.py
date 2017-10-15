@@ -7,7 +7,7 @@ with open('yawf/__init__.py') as fd:
             version = line.strip().split('=')[1].strip(' \'"')
             break
     else:
-        version = '0.0.1'
+        version = 'develop'
 
 with open('README.rst', 'rb') as fd:
     README = fd.read().decode()
@@ -20,11 +20,11 @@ setup(
     version=version,
     description='',
     long_description=README,
-    author='U.N. Owen',
-    author_email='me@un.known',
-    maintainer='U.N. Owen',
-    maintainer_email='me@un.known',
-    url='https://github.com/_/yawf',
+    author='Tambovcev D.A.',
+    author_email='tambovcev.dmitry@yandex.ru',
+    maintainer='Tambovcev D.A.',
+    maintainer_email='tambovcev.dmitry@yandex.ru',
+    url='https://github.com/dimbas/yawf',
     license='MIT',
 
     classifiers=[
