@@ -1,77 +1,11 @@
 import json
 import logging
+import http.client
 
 
 logger = logging.getLogger(__name__)
 
-HTTP_STATUSES_STRINGS = {
-        # Information codes
-        100: 'Continue',
-        101: 'Switching Protocols',
-        102: 'Processing',
-
-        # Success codes
-        200: 'OK',
-        201: 'Created',
-        202: 'Accepted',
-        203: 'Non-Authoritative Information',
-        204: 'No Content',
-        205: 'Reset Content',
-        206: 'Partial Content',
-        207: 'Multi-Status',
-        208: 'Already Reported',
-        226: 'IM Used',
-
-        # Redirection codes
-        300: 'Multiple Choices',
-        301: 'Moved Permanently',
-        302: 'Found',
-        303: 'See Other',
-        304: 'Not Modified',
-        305: 'Use Proxy',
-        307: 'Temporary Redirect',
-        308: 'Permanent Redirect',
-
-        # Client error codes
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        402: 'Payment Required',
-        403: 'Forbidden',
-        404: 'Not Found',
-        405: 'Method Not Allowed',
-        406: 'Not Acceptable',
-        407: 'Proxy Authentication Required',
-        408: 'Request Timeout',
-        409: 'Conflict',
-        410: 'Gone',
-        411: 'Length Required',
-        412: 'Precondition Failed',
-        413: 'Request Entity Too Large',
-        414: 'Request URI Too Long',
-        415: 'Unsupported Media Type',
-        416: 'Requested Range Not Satisfiable',
-        417: 'Expectation Failed',
-        418: 'I\'m a teapot',
-        422: 'Unprocessable Entity',
-        423: 'Locked',
-        424: 'Failed Dependency',
-        426: 'Upgrade Required',
-        428: 'Precondition Required',
-        429: 'Too Many Requests',
-        431: 'Request Header Fields Too Large',
-        449: 'Retry With',
-        451: 'Unavailable For Legal Reasons',
-
-        # Server error codes
-        500: 'Internal Server Error',
-        501: 'Not Implemented',
-        502: 'Bad Gateway',
-        503: 'Service Unavailable',
-        504: 'Gateway Timeout',
-        505: 'HTTP Version Not Supported',
-        507: 'Insufficient Storage',
-        510: 'Not Extended'
-    }
+HTTP_STATUSES_STRINGS = http.client.responses
 
 
 class Headers:
@@ -79,9 +13,11 @@ class Headers:
         if isinstance(env, Headers):
             self._headers = env._headers
         elif isinstance(env, dict):
-            self._headers = [(key.replace('HTTP_', '').replace('_', '-'), val) for key, val in env.items()]
+            self._headers = [(key, val) for key, val in env.items()]
         elif isinstance(env, (list, tuple)):
-            self._headers = [(key.replace('HTTP_', '').replace('_', '-'), val) for key, val in env]
+            self._headers = [(key.replace('HTTP_', '').replace('_', '-'), subval.strip())
+                             for key, val in env
+                             for subval in val.split(',')]
         else:
             self._headers = []
 
@@ -122,12 +58,16 @@ class Headers:
         return sorted(self._headers) == sorted(other._headers)
 
     @property
-    def raw(self):
+    def wsgi_headers(self):
         return self._headers
 
     @classmethod
     def from_wsgi_env(cls, env: dict):
-        return cls({key: val for key, val in env.items() if key.upper().startswith('HTTP_')})
+        h = cls()
+        h._headers = [(key.replace('HTTP_', '').replace('_', '-'), subval.strip())
+                      for key, val in env.items() if key.startswith('HTTP')
+                      for subval in val.split(',')]
+        return h
 
 
 class Cookies(dict):
@@ -161,7 +101,7 @@ class Cookies(dict):
         self[key] = val
 
     @property
-    def raw(self):
+    def wsgi_header(self):
         return ';'.join(['{}={}'.format(key, val) for key, val in self.items()])
 
 
@@ -258,9 +198,9 @@ class Response:
         return '{} {}'.format(self.status, HTTP_STATUSES_STRINGS[self.status])
 
     def make_headers(self):
-        if self.cookies.raw:
-            return self.headers.raw + [self.cookies.raw]
-        return self.headers.raw
+        if self.cookies.wsgi_header:
+            return self.headers.wsgi_headers + [self.cookies.wsgi_header]
+        return self.headers.wsgi_headers
 
     def __call__(self, environment, start_response):
         status = self.make_status_str()

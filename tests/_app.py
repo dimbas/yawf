@@ -79,7 +79,7 @@ def get_body(request: Request) -> Response:
 def get_headers(request: Request) -> Response:
     logger.info('[APP] calling get headers')
     h = request.headers
-    return Response('Received headers: {}'.format(h.raw), headers=request.headers)
+    return Response('Received headers: {}'.format(h.wsgi_headers), headers=request.headers)
 
 
 def get_json(request: Request) -> Response:

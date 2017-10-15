@@ -39,13 +39,13 @@ def create_request(path: str, method: str,
     env = create_base_env()
 
     if cookies is not None:
-        env['HTTP_COOKIE'] = Cookies(cookies).raw
+        env['HTTP_COOKIE'] = Cookies(cookies).wsgi_header
 
     if headers is not None:
         if isinstance(headers, dict):
             headers_iter = lambda: headers.items()
         elif isinstance(headers, Headers):
-            headers_iter = lambda: headers.raw
+            headers_iter = lambda: headers.wsgi_headers
         else:
             raise TypeError('Headers must be Headers instance or dict')
 
@@ -207,3 +207,9 @@ def test_headers():
 
     assert h == hh
     assert 'terminator' in str(h)
+
+    h.add('Some', 'val')
+    h.add('Some', 'more')
+
+    assert len(h.getall('Some')) == 2
+
