@@ -15,7 +15,7 @@ class HttpError(Exception):
     description = None
 
     def __init__(self, description=None, response=None):
-        if description is not None:
+        if description is not None:  # pragma: no cover
             self.description = description
 
         self.response = response
@@ -39,7 +39,7 @@ class HttpError(Exception):
         return [('Content-type', 'text/html')]
 
     def get_response(self, environ):
-        if self.response is not None:
+        if self.response is not None:  # pragma: no cover
             return self.response
 
         h = self.get_headers(environ)
@@ -50,7 +50,7 @@ class HttpError(Exception):
         response = self.get_response(environ)
         return response(environ, start_response)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '{name}({args})'\
             .format(name=self.__class__.__name__,
                     args=', '.join(['{}="{}"'.format(key, val) for key, val in self.__dict__.items()]))
