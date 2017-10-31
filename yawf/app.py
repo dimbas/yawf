@@ -40,8 +40,8 @@ class YAWF:
         logger.debug('Preprocessing request with before_response method')
         request = self.before_response(request)
 
-        handler = self.find_handler(request)
-        response = handler(request)
+        handler, args = self.find_handler(request)
+        response = handler(request, **args)
 
         logger.debug('Postprocessing response with after_response method')
         response = self.after_response(response)

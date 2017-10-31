@@ -108,16 +108,19 @@ def get_cookies(request: Request) -> Response:
                     .format(cookies, 'equals' if cookies == cookies_storage else 'not equals'))
 
 
+def process_url_args(request: Request, id, action) -> Response:
+    return Response('Received action {} to id {}'.format(action, id))
+
+
 app = YAWF()
 app.data = {}
-app.router.add_get('/', index)
-app.router.add_post('/data', add_data)
-app.router.add_get('/data', get_data)
-app.router.add_get('/body', get_body)
-app.router.add_get('/headers', get_headers)
-app.router.add_get('/json', get_json)
-app.router.add_get('/error', exception)
-app.router.add_put('/cookies', set_cookies)
-app.router.add_get('/cookies', get_cookies)
-
-
+app.router.add_get(r'/$', index)
+app.router.add_post(r'/data$', add_data)
+app.router.add_get(r'^/data$', get_data)
+app.router.add_get(r'^/body$', get_body)
+app.router.add_get(r'^/headers$', get_headers)
+app.router.add_get(r'^/json$', get_json)
+app.router.add_get(r'^/error$', exception)
+app.router.add_put(r'^/cookies$', set_cookies)
+app.router.add_get(r'^/cookies$', get_cookies)
+app.router.add_get('/prod/(?P<id>\d+)/(?P<action>[a-zA-Z]+)', process_url_args)

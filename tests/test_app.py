@@ -213,3 +213,10 @@ def test_headers():
 
     assert len(h.getall('Some')) == 2
 
+
+def test_url_args():
+    env = create_request('/prod/11/read', 'GET')
+    response = do_request(env)
+
+    assert '11' in response
+    assert 'read' in response
